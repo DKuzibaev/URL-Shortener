@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -19,6 +20,11 @@ type CSVHandler struct {
 }
 
 func NewCSVHandler(filePath string, level slog.Level) *CSVHandler {
+	dir := filepath.Dir(filePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		log.Fatalf("cannot create directory for CSV log: %v", err)
+	}
+
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("cannot open CSV log file: %v", err)
