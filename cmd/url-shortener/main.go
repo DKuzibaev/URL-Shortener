@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"url-shortener/internal/config"
+	logcsv "url-shortener/internal/logs"
 )
 
 const (
@@ -21,7 +22,8 @@ func main() {
 
 	log.Info("starting url-shortener", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
-	// TODO: init storage: postgresSQL
+
+	// TODO: init storage: sglline (clickhouse)
 
 	// TODO: init router: chi, "chi render"
 
@@ -29,20 +31,22 @@ func main() {
 }
 
 func setupLogger(env string) *slog.Logger {
-	var log *slog.Logger
+	var handlers []slog.Handler
+
+	// Консольный handler
 	switch env {
 	case envLocal:
-		log = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	case envDev:
-		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	case envProd:
-		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
-		)
+		handlers = append(handlers, slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	case envDev, envProd:
+		handlers = append(handlers, slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	}
-	return log
+
+	// CSV handler
+	csvHandler := logcsv.NewCSVHandler("logs/log.csv", slog.LevelDebug)
+	handlers = append(handlers, csvHandler)
+
+	// MultiHandler
+	multi := logcsv.NewMultiHandler(handlers...)
+
+	return slog.New(multi)
 }
