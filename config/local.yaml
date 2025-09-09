@@ -1,0 +1,6 @@
+env: "local" #local, dev, staging, prod
+data_path: "/data/vault.db" # путь к файлу базы данных
+http_server:
+  address: "localhost:8082"
+  timeout: 4s # время обработки одного запроса
+  idle_timeout: 60s # время ожидания между запросами
